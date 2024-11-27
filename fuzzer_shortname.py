@@ -54,7 +54,7 @@ def extract_filenames(response):
         return [line.strip() for line in match.group(1).split('\n') if line.strip()]
     return []
 
-def run_ffuf(original_cmd, wordlist, target_url):
+def run_ffuf(original_cmd, wordlist, target_url, output):
     """Run ffuf and return results"""
     try:
         # Split original command into parts
@@ -74,7 +74,7 @@ def run_ffuf(original_cmd, wordlist, target_url):
             cmd_parts = cmd_parts[1:]
             
         # Construct new command with all original arguments
-        ffuf_cmd = ['ffuf'] + cmd_parts + ['-w', wordlist, '-u', target_url, '-o', '/tmp/brainstorm/output.json']
+        ffuf_cmd = ['ffuf'] + cmd_parts + ['-w', wordlist, '-u', target_url, '-o', f'{output}/output.json']
         logger.info(f"Running ffuf command: {' '.join(ffuf_cmd)}")
         
         result = subprocess.run(ffuf_cmd, capture_output=True, text=True)
@@ -82,11 +82,11 @@ def run_ffuf(original_cmd, wordlist, target_url):
             logger.error(f"ffuf command failed: {result.stderr}")
             return None
         
-        if not os.path.exists('/tmp/brainstorm/output.json') or os.stat('/tmp/brainstorm/output.json').st_size == 0:
+        if not os.path.exists('{output}/output.json') or os.stat('{output}/output.json').st_size == 0:
             logger.warning("ffuf produced no output")
             return None        
             
-        with open('/tmp/brainstorm/output.json', 'r') as f:
+        with open('{output}/output.json', 'r') as f:
             data = json.load(f)
             return data
     except FileNotFoundError:
@@ -121,6 +121,7 @@ def main():
     parser.add_argument('--debug', action='store_true', help='Enable debug mode')
     parser.add_argument('--cycles', type=int, default=50, help='Number of fuzzing cycles to run (default: 50)')
     parser.add_argument('--model', default='qwen2.5-coder:latest', help='Ollama model to use (default: qwen2.5:latest)')
+    parser.add_argument('-o', '--output', default='/tmp/brainstorm', help='The output directory for links & ffuf files.')
     parser.add_argument('--status-codes', type=str, default='200,301,302,303,307,308,403,401,500',
                     help='Comma-separated list of status codes to consider as successful (default: 200,301,302,303,307,308,403,401,500)')    
 
@@ -137,12 +138,16 @@ def main():
     
     logger.info(f"Extracted base URL from command: {url_match.group(1)}")
     
-	# Initial setup
+    # Initial setup
     try:
-        os.mkdir('/tmp/brainstorm')
-        logger.info("Created output directory /tmp/brainstorm.")
+        output = args.output
+        if re.search('/$', output):
+            output = output.rstrip('/')
+
+        os.mkdir(output)
+        logger.info(f"Created output directory {output}.")
     except FileExistsError:
-        logger.info("/tmp/brainstorm already exists.")
+        logger.info(f"{output} already exists.")
 
     considered_status_codes = [int(code) for code in args.status_codes.split(',')]
     
@@ -198,11 +203,11 @@ def main():
                     logger.debug("\nNew untested filenames suggested by Ollama:")
                     for filename in untested_filenames:
                         logger.debug(f" {filename}")
-                with open('/tmp/brainstorm/links.txt', 'w') as f:
+                with open('{output}/links.txt', 'w') as f:
                     f.write('\n'.join(untested_filenames))
             
             # Run ffuf with original command
-            ffuf_results = run_ffuf(cmd, '/tmp/brainstorm/links.txt', url_match.group(1))
+            ffuf_results = run_ffuf(cmd, '{output}/links.txt', url_match.group(1), output)
             if ffuf_results and 'results' in ffuf_results:
                 if args.debug:
                     logger.debug("\nffuf results:")
@@ -224,7 +229,7 @@ def main():
                     new_discovered_filenames.update(new_discovered)
                 
                 # Save all discovered filenames to file
-                with open('/tmp/brainstorm/all_filenames.txt', 'w') as f:
+                with open('{output}/all_filenames.txt', 'w') as f:
                     f.write('\n'.join(sorted(all_filenames)))
             
             cycle += 1

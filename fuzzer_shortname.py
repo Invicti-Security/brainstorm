@@ -74,7 +74,7 @@ def run_ffuf(original_cmd, wordlist, target_url):
             cmd_parts = cmd_parts[1:]
             
         # Construct new command with all original arguments
-        ffuf_cmd = ['ffuf'] + cmd_parts + ['-w', wordlist, '-u', target_url, '-o', 'output.json']
+        ffuf_cmd = ['ffuf'] + cmd_parts + ['-w', wordlist, '-u', target_url, '-o', '/tmp/brainstorm/output.json']
         logger.info(f"Running ffuf command: {' '.join(ffuf_cmd)}")
         
         result = subprocess.run(ffuf_cmd, capture_output=True, text=True)
@@ -82,11 +82,11 @@ def run_ffuf(original_cmd, wordlist, target_url):
             logger.error(f"ffuf command failed: {result.stderr}")
             return None
         
-        if not os.path.exists('output.json') or os.stat('output.json').st_size == 0:
+        if not os.path.exists('/tmp/brainstorm/output.json') or os.stat('/tmp/brainstorm/output.json').st_size == 0:
             logger.warning("ffuf produced no output")
             return None        
             
-        with open('output.json', 'r') as f:
+        with open('/tmp/brainstorm/output.json', 'r') as f:
             data = json.load(f)
             return data
     except FileNotFoundError:
@@ -137,6 +137,13 @@ def main():
     
     logger.info(f"Extracted base URL from command: {url_match.group(1)}")
     
+	# Initial setup
+    try:
+        os.mkdir('/tmp/brainstorm')
+        logger.info("Created output directory /tmp/brainstorm.")
+    except FileExistsError:
+        logger.info("/tmp/brainstorm already exists.")
+
     considered_status_codes = [int(code) for code in args.status_codes.split(',')]
     
     all_filenames = set()  # all filenames including tried ones
@@ -191,11 +198,11 @@ def main():
                     logger.debug("\nNew untested filenames suggested by Ollama:")
                     for filename in untested_filenames:
                         logger.debug(f" {filename}")
-                with open('links.txt', 'w') as f:
+                with open('/tmp/brainstorm/links.txt', 'w') as f:
                     f.write('\n'.join(untested_filenames))
             
             # Run ffuf with original command
-            ffuf_results = run_ffuf(cmd, './links.txt', url_match.group(1))
+            ffuf_results = run_ffuf(cmd, '/tmp/brainstorm/links.txt', url_match.group(1))
             if ffuf_results and 'results' in ffuf_results:
                 if args.debug:
                     logger.debug("\nffuf results:")
@@ -217,7 +224,7 @@ def main():
                     new_discovered_filenames.update(new_discovered)
                 
                 # Save all discovered filenames to file
-                with open('all_filenames.txt', 'w') as f:
+                with open('/tmp/brainstorm/all_filenames.txt', 'w') as f:
                     f.write('\n'.join(sorted(all_filenames)))
             
             cycle += 1

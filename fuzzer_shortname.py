@@ -82,11 +82,11 @@ def run_ffuf(original_cmd, wordlist, target_url, output):
             logger.error(f"ffuf command failed: {result.stderr}")
             return None
         
-        if not os.path.exists('{output}/output.json') or os.stat('{output}/output.json').st_size == 0:
+        if not os.path.exists(f'{output}/output.json') or os.stat(f'{output}/output.json').st_size == 0:
             logger.warning("ffuf produced no output")
             return None        
             
-        with open('{output}/output.json', 'r') as f:
+        with open(f'{output}/output.json', 'r') as f:
             data = json.load(f)
             return data
     except FileNotFoundError:
@@ -203,11 +203,11 @@ def main():
                     logger.debug("\nNew untested filenames suggested by Ollama:")
                     for filename in untested_filenames:
                         logger.debug(f" {filename}")
-                with open('{output}/links.txt', 'w') as f:
+                with open(f'{output}/links.txt', 'w') as f:
                     f.write('\n'.join(untested_filenames))
             
             # Run ffuf with original command
-            ffuf_results = run_ffuf(cmd, '{output}/links.txt', url_match.group(1), output)
+            ffuf_results = run_ffuf(cmd, f'{output}/links.txt', url_match.group(1), output)
             if ffuf_results and 'results' in ffuf_results:
                 if args.debug:
                     logger.debug("\nffuf results:")
@@ -229,7 +229,7 @@ def main():
                     new_discovered_filenames.update(new_discovered)
                 
                 # Save all discovered filenames to file
-                with open('{output}/all_filenames.txt', 'w') as f:
+                with open(f'{output}/all_filenames.txt', 'w') as f:
                     f.write('\n'.join(sorted(all_filenames)))
             
             cycle += 1

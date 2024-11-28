@@ -9,6 +9,10 @@ I wrote a blog post about the ideas behind this tool:
 
 Combines traditional web fuzzing techniques with AI-powered path generation to discover hidden endpoints, files, and directories in web applications.
 
+## Information
+
+The original author of **brainstorm** is [@harisec](https://github.com/harisec)/[Invicti Security](https://github.com/Invicti-Security) (thanks!). I only forked the project to modify a few things & add functions that will not be implemented in the main repo (ex: argument for output directory). 
+
 ## Screenshot
 ![screenshot](screenshot.png)
 
@@ -72,19 +76,21 @@ python fuzzer_shortname.py "ffuf -w ./fuzz.txt -u http://example.com/FUZZ" "BENC
 
 #### Main Fuzzer (fuzzer.py)
 ```
---debug             Enable debug mode
---cycles N          Number of fuzzing cycles to run (default: 50)
---model NAME        Ollama model to use (default: qwen2.5-coder:latest)
+-d, --debug             Enable debug mode
+-c, --cycles N          Number of fuzzing cycles to run (default: 50)
+-m, --model NAME        Ollama model to use (default: qwen2.5-coder:latest)
 --prompt-file PATH  Path to prompt file (default: prompts/files.txt)
+-o, --output        The output directory for links & ffuf files (default: /tmp/brainstorm)
 --status-codes LIST Comma-separated list of status codes to consider successful
                    (default: 200,301,302,303,307,308,403,401,500)
 ```
 
 #### Short Filename Fuzzer (fuzzer_shortname.py)
 ```
---debug             Enable debug mode
---cycles N          Number of fuzzing cycles to run (default: 50)
---model NAME        Ollama model to use (default: qwen2.5-coder:latest)
+-d, --debug             Enable debug mode
+-c, --cycles N          Number of fuzzing cycles to run (default: 50)
+-m, --model NAME        Ollama model to use (default: qwen2.5-coder:latest)
+-o, --output        The output directory for links & ffuf files (default: /tmp/brainstorm)
 --status-codes LIST Comma-separated list of status codes to consider successful
 ```
 
@@ -103,8 +109,8 @@ python benchmark.py
 
 ## Output
 
-- Discovered paths are saved to `all_links.txt`
-- Short filenames are saved to `all_filenames.txt`
+- Discovered paths are saved to `all_links.txt`, in the directory specified in the `--output` argument (defaults to /tmp/brainstorm).
+- Short filenames are saved to `all_filenames.txt`, in the directory specified in the `--output` argument (defaults to /tmp/brainstorm).
 - Real-time console output shows progress and discoveries
 
 ## Benchmarking Ollama LLM models

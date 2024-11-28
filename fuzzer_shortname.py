@@ -118,9 +118,9 @@ def main():
     parser = argparse.ArgumentParser(description='Shortname Fuzzer with Ollama integration')
     parser.add_argument('command', help='ffuf command to run')
     parser.add_argument('filename', help='Filename to use in the prompt')
-    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
-    parser.add_argument('--cycles', type=int, default=50, help='Number of fuzzing cycles to run (default: 50)')
-    parser.add_argument('--model', default='qwen2.5-coder:latest', help='Ollama model to use (default: qwen2.5:latest)')
+    parser.add_argument('-d', '--debug', action='store_true', help='Enable debug mode')
+    parser.add_argument('-c', '--cycles', type=int, default=50, help='Number of fuzzing cycles to run (default: 50)')
+    parser.add_argument('-m',  Invicti Security '--model', default='qwen2.5-coder:latest', help='Ollama model to use (default: qwen2.5:latest)')
     parser.add_argument('-o', '--output', default='/tmp/brainstorm', help='The output directory for links & ffuf files (default: /tmp/brainstorm)')
     parser.add_argument('--status-codes', type=str, default='200,301,302,303,307,308,403,401,500',
                     help='Comma-separated list of status codes to consider as successful (default: 200,301,302,303,307,308,403,401,500)')    
